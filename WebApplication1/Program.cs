@@ -21,72 +21,50 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<UserContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-// Add services to the container.
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Currency API", Version = "v1" });
-
-    c.AddSecurityDefinition("basic", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "basic",
-        In = ParameterLocation.Header,
-        Description = "Enter your username and password"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "basic"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("BasicAuthentication", new AuthorizationPolicyBuilder("Basic")
-        .RequireAuthenticatedUser()
-        .Build());
-});
-builder.Services.AddHttpClient();
-builder.Services.AddHostedService<CurrencyRateBackgroundService>();
-
-//сервисы аутентификации
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = "CurrencyApi",
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
             ValidateAudience = true,
-            ValidAudience = "https://localhost:5001",
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
             ValidateLifetime = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("your_super_secret_key_here")),
             ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
         };
     });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
 
-Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    c.AddSecurityDefinition("basicAuth", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "basic",
+        Description = "Введите логин и пароль в формате username:password"
+    });
+
+    c.OperationFilter<AddLoginOperationFilter>();
+});
+
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<CurrencyRateBackgroundService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -96,39 +74,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
-app.Use(async (context, next) =>
-{
-    if (context.Request.Headers.ContainsKey("Authorization"))
-    {
-        var authHeader = context.Request.Headers["Authorization"].ToString();
-        if (authHeader.StartsWith("Basic "))
-        {
-            var encodedCredentials = authHeader["Basic ".Length..].Trim();
-            var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(encodedCredentials)).Split(':');
-            var username = credentials[0];
-            var password = credentials[1];
-
-            // Проверка логина/пароля
-            var user = await context.RequestServices.GetRequiredService<UserContext>()
-                .Users.FirstOrDefaultAsync(u => u.Username == username);
-
-            if (user != null)
-            {
-                var hasher = context.RequestServices.GetRequiredService<IPasswordHasher<User>>();
-                if (hasher.VerifyHashedPassword(user, user.PasswordHash, password) == PasswordVerificationResult.Success)
-                {
-                    var claims = new[]
-                    {
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim("id", user.Id.ToString())
-                    };
-                    context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Basic"));
-                }
-            }
-        }
-    }
-    await next();
-});
 app.UseAuthorization();
 
 app.MapControllers();
