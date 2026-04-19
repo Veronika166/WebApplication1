@@ -1,20 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using WebApplication1;
-using System;
-using System.Linq;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using WebApplication1.Services;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using WebApplication1.Model;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using System.Security.Cryptography;
-using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,7 +31,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1", Description = "Currency Exchange API" });
 
     c.AddSecurityDefinition("basicAuth", new OpenApiSecurityScheme
     {
@@ -56,6 +39,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "basic",
         Description = "Введите логин и пароль в формате username:password"
     });
+
 
     c.OperationFilter<AddLoginOperationFilter>();
 });
@@ -89,11 +73,11 @@ using (var scope = app.Services.CreateScope())
 
         if (!db.Валюты.Any())
         {
-            var currencies = new List<Валюта>
+            var currencies = new List<Currency>
             {
-                new Валюта { Название_валюты = "Доллар США" },
-                new Валюта { Название_валюты = "Евро" },
-                new Валюта { Название_валюты = "Российский рубль" }
+                new Currency { Название_валюты = "Доллар США" },
+                new Currency { Название_валюты = "Евро" },
+                new Currency { Название_валюты = "Российский рубль" }
             };
 
             db.Валюты.AddRange(currencies);
@@ -102,7 +86,7 @@ using (var scope = app.Services.CreateScope())
             //Заполняем знчение для рубля для наглядности
             var today = DateTime.Today;
             db.КурсыВалют.AddRange(
-                new Курсы_валют { Дата = today, Значение = 1.00m, ID_валюты = currencies[2].Id_валюты }
+                new Exchange_rates { Дата = today, Значение = 1.00m, ID_валюты = currencies[2].Id_валюты }
             );
 
             db.SaveChanges();
