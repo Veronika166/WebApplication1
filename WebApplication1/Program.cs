@@ -1,7 +1,6 @@
-
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<UserContext>(options =>
+builder.Services.AddDbContext<DBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -45,7 +44,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddHttpClient();
-builder.Services.AddHostedService<CurrencyRateBackgroundService>();
+builder.Services.AddSingleton<CurrencyRateBackgroundService>();
+builder.Services.AddScoped<CurrencyService>();
 
 var app = builder.Build();
 
@@ -67,7 +67,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var db = services.GetRequiredService<UserContext>();
+        var db = services.GetRequiredService<DBContext>();
 
         db.Database.EnsureCreated();
 

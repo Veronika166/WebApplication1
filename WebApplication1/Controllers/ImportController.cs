@@ -1,13 +1,16 @@
-﻿namespace WebApplication1.Model.DTO.Controllers;
+﻿using WebApplication1.Data;
+using WebApplication1.Model.DTO;
+
+namespace WebApplication1.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
 public class ImportController : ControllerBase
 {
-    private readonly UserContext _context;
+    private readonly DBContext _context;
     private readonly ILogger<ImportController> _logger;
 
-    public ImportController(UserContext context, ILogger<ImportController> logger)
+    public ImportController(DBContext context, ILogger<ImportController> logger)
     {
         _context = context;
         _logger = logger;

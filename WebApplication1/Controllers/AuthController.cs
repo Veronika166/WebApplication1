@@ -1,15 +1,18 @@
-﻿namespace WebApplication1.Model.DTO.Controllers;
+﻿using WebApplication1.Data;
+using WebApplication1.Model.DTO;
+
+namespace WebApplication1.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserContext _context;
+    private readonly DBContext _context;
     private readonly IConfiguration _configuration;
     private readonly IPasswordHasher<User> _passwordHasher;
 
     public AuthController(
-        UserContext context,
+        DBContext context,
         IConfiguration configuration,
         IPasswordHasher<User> passwordHasher)
     {

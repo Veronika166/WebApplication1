@@ -1,4 +1,4 @@
-﻿namespace WebApplication1.Model.Entity;
+﻿namespace WebApplication1.Model.DTO;
 
 public class LoginModel
 {

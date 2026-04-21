@@ -5,13 +5,12 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using WebApplication1.Model.Entity;
 
 #nullable disable
 
 namespace WebApplication1.Data.Migrations
 {
-    [DbContext(typeof(UserContext))]
+    [DbContext(typeof(DBContext))]
     [Migration("20250515092928_InitialCreate")]
     partial class InitialCreate
     {

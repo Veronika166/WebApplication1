@@ -1,9 +1,9 @@
-﻿namespace WebApplication1.Model.Entity;
+﻿namespace WebApplication1.Data;
 
-public class UserContext : DbContext
+public class DBContext : DbContext
 {
     public DbSet<User> Users { get; set; }
-    public UserContext(DbContextOptions<UserContext> options) : base(options) { }
+    public DBContext(DbContextOptions<DBContext> options) : base(options) { }
 
     public DbSet<Currency> Валюты { get; set; }
     public DbSet<Exchange_rates> КурсыВалют { get; set; }

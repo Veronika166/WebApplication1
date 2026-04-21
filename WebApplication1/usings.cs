@@ -21,3 +21,4 @@ global using Microsoft.EntityFrameworkCore.Migrations;
 global using System.IdentityModel.Tokens.Jwt;
 global using System.Security.Claims;
 global using Swashbuckle.AspNetCore.Annotations;
+global using WebApplication1.Data;
