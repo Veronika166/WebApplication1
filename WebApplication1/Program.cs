@@ -44,8 +44,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<CurrencyRateBackgroundService>();
-builder.Services.AddScoped<CurrencyService>();
+builder.Services.AddScoped<CurrencyRateBackgroundService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 var app = builder.Build();
 
@@ -54,6 +54,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseHttpsRedirection();
 

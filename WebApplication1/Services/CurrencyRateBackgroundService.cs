@@ -4,11 +4,12 @@ public class CurrencyRateBackgroundService : BackgroundService
 {
     private readonly IServiceProvider _services;
     private readonly ILogger<CurrencyRateBackgroundService> _logger;
-    private readonly CurrencyService _currencyService;
-   public CurrencyRateBackgroundService(
+    private readonly ICurrencyService _currencyService;
+
+    public CurrencyRateBackgroundService(
         IServiceProvider services,
         ILogger<CurrencyRateBackgroundService> logger,
-        CurrencyService currencyService)
+        ICurrencyService currencyService)
     {
         _currencyService = currencyService;
         _services = services;

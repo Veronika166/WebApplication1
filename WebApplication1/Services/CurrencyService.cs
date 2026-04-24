@@ -1,8 +1,6 @@
-﻿using System.Net.Http;
+﻿namespace WebApplication1.Services;
 
-namespace WebApplication1.Services;
-
-public class CurrencyService
+public class CurrencyService : ICurrencyService 
 {
     private ILogger<CurrencyService> _logger;
     private HttpClient _httpClient;
