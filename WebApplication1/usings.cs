@@ -23,4 +23,4 @@ global using System.Security.Claims;
 global using Swashbuckle.AspNetCore.Annotations;
 global using WebApplication1.Data;
 global using WebApplication1.Model.Interfaces;
-
+global using WebApplication1.Controllers;
