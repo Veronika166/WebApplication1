@@ -1,7 +1,4 @@
-﻿using WebApplication1.Data;
-using WebApplication1.Model.DTO;
-
-namespace WebApplication1.Controllers;
+﻿namespace WebApplication1.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
