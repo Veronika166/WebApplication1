@@ -1,17 +1,20 @@
 ﻿namespace WebApplication1.Services;
 
-public class CurrencyService : ICurrencyService 
+public class CurrencyService : ICurrencyService
 {
     private ILogger<CurrencyService> _logger;
     private HttpClient _httpClient;
+    private readonly DBContext _context;
 
     public CurrencyService(
         IServiceProvider services,
         ILogger<CurrencyService> logger,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        DBContext context)
     {
         _logger = logger;
         _httpClient = httpClient;
+        _context = context;
     }
     public async Task FetchAndSaveRates(DBContext dbContext)
     {
@@ -102,6 +105,43 @@ public class CurrencyService : ICurrencyService
         {
             _logger.LogError(ex, $"Ошибка при сохранении курса {currencyName}");
         }
+    }
+    public async Task<List<CbrCurrency>> GetCbCurrencyRate(DateOnly dateCb)
+    {
+        try
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var url = $"https://www.cbr.ru/scripts/XML_daily.asp?date_req={dateCb.ToString("dd/MM/yyyy")}";
+            var responseBytes = await _httpClient.GetByteArrayAsync(url);
+
+            // Конвертируем из windows-1251
+            var encoding = Encoding.GetEncoding(1251);
+            var xmlString = encoding.GetString(responseBytes);
+
+            var serializer = new XmlSerializer(typeof(CbrCurrencyRate));
+            using var reader = new StringReader(xmlString);
+            var result = (CbrCurrencyRate)serializer.Deserialize(reader);
+            return result.Currencies.ToList();
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении курсов");
+            throw;
+        }
+    }
+    public async Task<List<ExchangeRateDto>> GetCurrencyHistory(string currencyName)
+    {
+        var currency = await _context.Валюты.FirstOrDefaultAsync(c => c.Название_валюты == currencyName);
+       
+        var rates = await _context.КурсыВалют.Where(r => r.ID_валюты == currency.Id_валюты).Select(r => new ExchangeRateDto
+    {
+        Date = r.Дата,
+        Value = r.Значение,
+        CurrencyId = r.ID_валюты
+    }).OrderBy(r => r.Date).ToListAsync();    
+    return rates;
     }
 }
 
