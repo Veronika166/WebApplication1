@@ -1,64 +1,34 @@
+using WebApplication1.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<UserContext>(options =>
+builder.Services.AddDbContext<DBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
-        };
-    });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1", Description = "Currency Exchange API" });
-
-    c.AddSecurityDefinition("basicAuth", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.Http,
-        Scheme = "basic",
-        Description = "Введите логин и пароль в формате username:password"
-    });
-
-
-    c.OperationFilter<AddLoginOperationFilter>();
+  
 });
 
 builder.Services.AddHttpClient();
-builder.Services.AddHostedService<CurrencyRateBackgroundService>();
+builder.Services.AddScoped<CurrencyRateBackgroundService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapControllers();
 
@@ -67,7 +37,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var db = services.GetRequiredService<UserContext>();
+        var db = services.GetRequiredService<DBContext>();
 
         db.Database.EnsureCreated();
 
@@ -91,19 +61,7 @@ using (var scope = app.Services.CreateScope())
 
             db.SaveChanges();
             Console.WriteLine("Данные успешно инициализированы");
-
-            if (!db.Users.Any())
-            {
-                var passwordHasher = new PasswordHasher<User>();
-                var adminUser = new User
-                {
-                    Username = "admin"
-                };
-                adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "admin123");
-
-                db.Users.Add(adminUser);
-                db.SaveChanges();
-            }
+           
         }
     }
     catch (Exception ex)
