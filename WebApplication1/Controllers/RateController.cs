@@ -19,6 +19,12 @@ public class RateController : ControllerBase
         var rate = await _currencyService.GetCbCurrencyRate(date);
         return Ok(rate);
     }
-
-  
+    [HttpGet("{CurrencyName}/history")]
+    public async Task<ActionResult> GetHistory(string CurrencyName)
+    {
+        var rate = await _currencyService.GetCurrencyHistory(CurrencyName);
+        return Ok(rate);
+    }
 }
+  
+

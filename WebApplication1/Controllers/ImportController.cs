@@ -12,12 +12,15 @@ public class ImportController : ControllerBase
         _context = context;
         _logger = logger;
     }
-
+    [HttpGet("test")]
+    public IActionResult Test()
+    {
+        throw new Exception();
+    }
     [HttpPost("upload-rates")]
     public async Task<IActionResult> UploadRates([FromBody] List<ExchangeRateDto> rates)
     {
-        try
-        {
+
             foreach (var rate in rates)
             {
                 // Проверяем существование валюты
@@ -53,12 +56,7 @@ public class ImportController : ControllerBase
 
             await _context.SaveChangesAsync();
             return Ok(new { Message = "Данные успешно импортированы" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при импорте данных");
-            return StatusCode(500, new { Error = "Ошибка при импорте данных" });
-        }
+   
     }
 }
 
